@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Кликер и экран загрузки</title>
+<style>
+  /* Общие стили */
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+  }
+
+  /* Экран загрузки */
+  #loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 9999;
+    overflow: hidden; /* чтобы ничего не выходило за границы */
+  }
+
+  /* Размер изображения загрузочного экрана - адаптивный */
+  #loading-image {
+    width: 480px;
+    height: auto; /* сохраняем пропорции */
+  }
+
+  /* Надпись прогресса */
+  #loading-text {
+    position: absolute; /* чтобы располагалась поверх изображения */
+    bottom: 20px; /* чуть ниже снизу */
+    width: 100%;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: black; /* лучше читается на белом фоне */
+    text-shadow: none; 
+  }
+
+  /* Основной фон на главном экране */
+#main-background {
+  position: fixed; 
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('img/12.jpg'); /* вставьте сюда путь к вашей фотографии по умолчанию */
+  background-size: cover; 
+  background-position: center; 
+  z-index: -1; 
+}
+
+/* Контейнер для контента поверх фона, центрированный по вертикали и горизонтали */
+#main-content {
+  position: relative; 
+  height:auto; 
+  display:flex;
+  flex-direction: column;
+  align-items:center; 
+  justify-content:center; 
+   text-align:center; 
+}
+
+/* Стиль для кнопки кликера (если нужен) - можно убрать, если только изображение) */
+#clicker-btn {
+ padding:15px30px;
+ font-size:24px;
+ cursor:pointer;
+ background-color:#4CAF50; 
+ color:white;
+ border:none;
+ border-radius:8px;
+ transition:.3s all;
+ margin-top:20px; /* чтобы было отделено от картинки */
+}
+
+#clicker-btn:hover {
+ background-color:#45a049;
+}
+
+/* Стиль для центрального изображения-кликера */
+#click-image {
+ cursor:pointer; 
+ width: 400px; 
+ height: 400px;; 
+ margin-top:20px; 
+ border-radius:10px; /* опционально, для красоты */
+ box-shadow:0px 4px 10px rgba(0,0,0,0.3);
+}
+</style>
+</head>
+<body>
+
+<!-- Экран загрузки -->
+<div id="loading-screen">
+ <img id="loading-image" src="" alt="Загрузка..." />
+ <div id="loading-text">Loading...</div>
+</div>
+
+<!-- Фон на главном экране -->
+<div id="main-background"></div>
+
+<!-- Основной контент -->
+<div id="main-content">
+ <h1>Кликер</h1>
+ <!-- Можно оставить кнопку или убрать -->
+ <!-- <button id="clicker-btn">Кликер</button> -->
+ <img id="click-image" src="" alt="Кликайте сюда" />
+ <div>Клики на счетчике:</div>
+ <h2 id="counter">0</h2>
+</div>
+
+<script>
+/* Массив изображений для смены при достижении порогов */
+// Вставьте свои изображения из папки img
+const images = [
+ 'img/20.jpg',   // начальное изображение
+ 'img/16.jpg',   // после достижения порога в ~100
+ 'img/17.jpg',     // после достижения порога в ~100000
+ 'img/18.jpg',   // после достижения порога в ~1000000
+ 'img/19.jpg'     // после достижения порога в ~10000000
+];
+
+// Пороги для смены изображений
+const thresholds = [100,      // при достижении этого количества кликов меняется на второе изображение
+                    300,
+                    1000000,
+                    10000000];
+
+let currentImageIndex = 0;
+
+// Переменная для подсчета кликов
+let totalClicks = parseInt(localStorage.getItem('totalClicks')) || 0;
+
+// Переменная множителя за одно нажатие
+let clickMultiplier =1;
+
+// Элемент счетчика
+const counterElem = document.getElementById('counter');
+
+// Элемент изображения
+const clickImage = document.getElementById('click-image');
+
+// Обновляем отображение счетчика при запуске
+function updateCounter() {
+ counterElem.textContent = totalClicks.toLocaleString();
+}
+
+// Обновляем изображение по текущему индексу
+function updateImage() {
+ clickImage.src = images[currentImageIndex];
+}
+
+// Проверка и смена изображения при достижении порогов
+function checkThresholds() {
+ if (currentImageIndex < thresholds.length && totalClicks >= thresholds[currentImageIndex]) {
+   currentImageIndex++;
+   if (currentImageIndex >= images.length) currentImageIndex=images.length-1; // защита
+
+   updateImage();
+
+   // Увеличиваем множитель за одно нажатие при смене изображения
+   clickMultiplier++;
+ }
+}
+
+// Обработчик клика по изображению
+clickImage.addEventListener('click', () => {
+ totalClicks += clickMultiplier;
+
+ // Сохраняем прогресс в localStorage (опционально)
+ localStorage.setItem('totalClicks', totalClicks);
+
+ updateCounter();
+ checkThresholds();
+});
+
+// Инициализация страницы
+window.onload = () => {
+ // Установка начального изображения
+ updateImage();
+
+ // Обновление счетчика при загрузке
+ updateCounter();
+
+ // Можно добавить обработку для кнопки или другого элемента, если нужно
+
+};
+</script>
+
+<script>
+// Загрузка экрана (оставьте как есть или уберите, если не нужен)
+const loadingImage = document.getElementById('loading-image');
+const loadingScreen = document.getElementById('loading-screen');
+const loadingText = document.getElementById('loading-text');
+
+const imagesLoading = [
+ 'img/5.jpg',
+ 'img/6.jpg',
+ 'img/7.jpg',
+ 'img/8.jpg',
+ 'img/9.jpg',
+ 'img/10.jpg',
+ 'img/11.jpg'
+];
+
+let loadIndex=0;
+
+function showNextLoadingImage() {
+ if (loadIndex >= imagesLoading.length) {
+   loadingScreen.style.display='none';
+   document.getElementById('main-content').style.display='flex';
+   return;
+ }
+ loadingImage.src=imagesLoading[loadIndex];
+ loadIndex++;
+ setTimeout(showNextLoadingImage,2000);
+}
+
+function updateLoadingProgress() {
+ loadingText.textContent='Loading...';
+
+ setTimeout(() => { loadingText.textContent='Loading...'; },2000);
+}
+
+window.onload=()=>{
+ showNextLoadingImage();
+};
+</script>
+
+</body>
+</html>
